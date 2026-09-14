@@ -1,0 +1,251 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Central de Solicitações & Documentos</h1>
+    <p class="page-subtitle">Acompanhe e gerencie a emissão de certificados e declarações dos alunos.</p>
+  </div>
+  <button mat-raised-button color="primary" (click)="abrirModalNovaSolicitacao()" aria-label="Nova solicitação de documento">
+    <mat-icon>add</mat-icon>
+    <span>Nova Solicitação</span>
+  </button>
+</div>
+
+<!-- Barra de Filtros e Busca -->
+<div class="filter-card">
+  <div class="filters-row">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Buscar por Aluno, CPF ou Curso</mat-label>
+      <mat-icon matPrefix>search</mat-icon>
+      <input matInput (keyup)="aplicarFiltroTexto($event)" placeholder="Ex: Ana Clara" aria-label="Campo de busca de solicitações">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="date-range-field">
+      <mat-label>Período do Pedido</mat-label>
+      <mat-date-range-input [rangePicker]="picker">
+        <input
+          matStartDate
+          placeholder="Início"
+          [ngModel]="dataInicio()"
+          (ngModelChange)="onDataInicioChange($event)"
+          aria-label="Data inicial"
+        />
+        <input
+          matEndDate
+          placeholder="Fim"
+          [ngModel]="dataFim()"
+          (ngModelChange)="onDataFimChange($event)"
+          aria-label="Data final"
+        />
+      </mat-date-range-input>
+      <mat-datepicker-toggle matIconSuffix [for]="picker" aria-label="Abrir seletor de data"></mat-datepicker-toggle>
+      <mat-date-range-picker #picker></mat-date-range-picker>
+
+      @if (dataInicio() || dataFim()) {
+        <button
+          mat-icon-button
+          matSuffix
+          (click)="limparFiltroDatas()"
+          matTooltip="Limpar filtro de datas"
+          aria-label="Limpar filtro de datas">
+          <mat-icon>clear</mat-icon>
+        </button>
+      }
+    </mat-form-field>
+  </div>
+
+  <mat-chip-listbox class="status-chips" [value]="filtroStatusAtivo()" aria-label="Filtrar solicitações por status">
+    <mat-chip-option (click)="filtrarPorStatus('TODOS')" value="TODOS">Todos</mat-chip-option>
+    <mat-chip-option (click)="filtrarPorStatus('PENDENTE')" value="PENDENTE">
+      <div class="chip-content">
+        <mat-icon>warning</mat-icon> 
+        <span>Pendentes</span>
+      </div>
+    </mat-chip-option>
+    <mat-chip-option (click)="filtrarPorStatus('SOLICITADO')" value="SOLICITADO">
+      <div class="chip-content">
+        <mat-icon>hourglass_top</mat-icon>
+        <span>Solicitados</span>
+      </div>
+    </mat-chip-option>
+    <mat-chip-option (click)="filtrarPorStatus('EMITIDO')" value="EMITIDO">
+      <div class="chip-content">
+        <mat-icon>check_circle</mat-icon>
+        <span>Emitidos</span>
+      </div>
+    </mat-chip-option>
+    <mat-chip-option (click)="filtrarPorStatus('ENTREGUES')" value="ENTREGUES">
+      <div class="chip-content">
+        <mat-icon>mail</mat-icon>
+        <span>Entregues</span> 
+      </div>
+    </mat-chip-option>
+  </mat-chip-listbox>
+</div>
+
+<!-- Tabela de Solicitações -->
+<div class="table-container mat-elevation-z1">
+  <table mat-table [dataSource]="dataSource" matSort aria-label="Tabela de solicitações de documentos">
+
+    <!-- COLUNA DE CHECKBOX (MODO DE SELEÇÃO) -->
+    <ng-container matColumnDef="select">
+      <th mat-header-cell *matHeaderCellDef class="checkbox-col">
+        <mat-checkbox
+          (change)="$event ? toggleAllRows() : null"
+          [checked]="selection.hasValue() && isAllSelected()"
+          [indeterminate]="selection.hasValue() && !isAllSelected()"
+          aria-label="Selecionar todas as solicitações">
+        </mat-checkbox>
+      </th>
+      <td mat-cell *matCellDef="let row" class="checkbox-col">
+        <mat-checkbox
+          (click)="$event.stopPropagation()"
+          (change)="$event ? selection.toggle(row) : null"
+          [checked]="selection.isSelected(row)"
+          [attr.aria-label]="'Selecionar solicitação de ' + row.alunoNome">
+        </mat-checkbox>
+      </td>
+    </ng-container>
+
+    <!-- Coluna Aluno & Curso -->
+    <ng-container matColumnDef="aluno">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header> Aluno & Curso </th>
+      <td mat-cell *matCellDef="let row">
+        <div class="aluno-info">
+          <span class="aluno-nome">{{ row.alunoNome }}</span>
+          <span class="aluno-sub">{{ row.cursoNome }} • CPF: {{ row.alunoCpf }}</span>
+        </div>
+      </td>
+    </ng-container>
+
+    <!-- Coluna Tipo de Documento -->
+    <ng-container matColumnDef="tipoDocumento">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header> Documento </th>
+      <td mat-cell *matCellDef="let row">
+        <span class="doc-badge">{{ formatarTipoDoc(row.tipoDocumento) }}</span>
+      </td>
+    </ng-container>
+
+    <!-- Coluna Data de Solicitação -->
+    <ng-container matColumnDef="dataSolicitacao">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header> Data Pedido </th>
+      <td mat-cell *matCellDef="let row"> {{ row.dataSolicitacao | date:'dd/MM/yyyy' }} </td>
+    </ng-container>
+
+    <!-- Coluna Status da Emissão -->
+    <ng-container matColumnDef="statusEmissao">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header> Status Emissão </th>
+      <td mat-cell *matCellDef="let row">
+        <div class="cell-action-group">
+          <span class="status-pill" [ngClass]="row.statusEmissao.toLowerCase()">
+            {{ row.statusEmissao }}
+          </span>
+
+          <button
+            mat-icon-button
+            class="btn-more"
+            [matMenuTriggerFor]="menuStatus"
+            matTooltip="Alterar status"
+            [attr.aria-label]="'Alterar status da solicitação de ' + row.alunoNome">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+
+          <mat-menu #menuStatus="matMenu">
+            <button mat-menu-item (click)="alterarStatus(row, 'PENDENTE')" [disabled]="row.statusEmissao === 'PENDENTE'">
+              <mat-icon class="status-icon pendente">warning</mat-icon>
+              <span>Marcar como Pendente</span>
+            </button>
+            <button mat-menu-item (click)="alterarStatus(row, 'SOLICITADO')" [disabled]="row.statusEmissao === 'SOLICITADO'">
+              <mat-icon class="status-icon solicitado">hourglass_top</mat-icon>
+              <span>Marcar como Solicitado</span>
+            </button>
+            <button mat-menu-item (click)="alterarStatus(row, 'EMITIDO')" [disabled]="row.statusEmissao === 'EMITIDO'">
+              <mat-icon class="status-icon emitido">check_circle</mat-icon>
+              <span>Marcar como Emitido</span>
+            </button>
+          </mat-menu>
+        </div>
+      </td>
+    </ng-container>
+
+    <!-- Coluna Entrega -->
+    <ng-container matColumnDef="entregue">
+      <th mat-header-cell *matHeaderCellDef> Entrega </th>
+      <td mat-cell *matCellDef="let row">
+        <div class="cell-action-group">
+          @if (row.entregue) {
+            <span class="delivery-badge success" [matTooltip]="'Entregue em ' + (row.dataEntrega | date:'dd/MM/yyyy')">
+              <mat-icon>check_circle</mat-icon> Entregue
+            </span>
+          } @else {
+            <span class="delivery-badge pending">
+              <mat-icon>hourglass_empty</mat-icon> Pendente
+            </span>
+          }
+
+          <button
+            mat-icon-button
+            class="btn-more"
+            [matMenuTriggerFor]="menuEntrega"
+            matTooltip="Opções de entrega"
+            [attr.aria-label]="'Opções de entrega para ' + row.alunoNome">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+
+          <mat-menu #menuEntrega="matMenu">
+            @if (!row.entregue) {
+              <button mat-menu-item (click)="toggleEntrega(row)">
+                <mat-icon id="entrega-icon">mark_email_read</mat-icon>
+                <span>Marcar como Entregue</span>
+              </button>
+            } @else {
+              <button mat-menu-item (click)="toggleEntrega(row)">
+                <mat-icon>undo</mat-icon>
+                <span>Marcar como Pendente</span>
+              </button>
+            }
+          </mat-menu>
+        </div>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns()"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns();"></tr>
+
+    <!-- Estado de tabela vazia -->
+    <tr class="mat-row" *matNoDataRow>
+      <td class="mat-cell empty-table-cell" [attr.colspan]="displayedColumns().length">
+        <div class="empty-state">
+          <mat-icon>search_off</mat-icon>
+          <p>Nenhuma solicitação encontrada para os filtros aplicados.</p>
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Barra do Rodapé: Paginador e Ações de Seleção (Estilização herdada globalmente) -->
+  <div class="table-footer-bar">
+    <div class="table-actions">
+      @if (!modoSelecao()) {
+        <button mat-stroked-button color="primary" (click)="ativarModoSelecao()" aria-label="Ativar modo de seleção múltipla">
+          <mat-icon>check_box</mat-icon> Selecionar
+        </button>
+      } @else {
+        <div class="active-actions">
+          <button mat-button (click)="cancelarModoSelecao()" aria-label="Cancelar seleção">
+            Cancelar
+          </button>
+          <button
+            mat-flat-button
+            color="warn"
+            [disabled]="selection.isEmpty()"
+            (click)="abrirDialogDelecao()"
+            [attr.aria-label]="'Deletar ' + selection.selected.length + ' solicitações selecionadas'">
+            <mat-icon>delete</mat-icon> Deletar ({{ selection.selected.length }})
+          </button>
+        </div>
+      }
+    </div>
+
+    <!-- Paginador -->
+    <mat-paginator [pageSizeOptions]="[5, 10, 25]" showFirstLastButtons aria-label="Navegação de paginação das solicitações"></mat-paginator>
+  </div>
+</div>

@@ -1,0 +1,268 @@
+.header-com-filtro {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 4px;
+
+  .filtro-mes-field {
+    width: 180px;
+    margin-bottom: -1.25em;
+  }
+}
+
+.item-actions button {
+  color: var(--color-primary);
+}
+
+/* KPI GRID */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.kpi-card {
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  background-color: var(--bg-surface);
+}
+
+.kpi-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px !important;
+}
+
+.kpi-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.kpi-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.kpi-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-top: 4px;
+}
+
+.kpi-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  mat-icon {
+    font-size: 26px;
+    width: 26px;
+    height: 26px;
+  }
+
+  &.blue {
+    background-color: var(--color-primary-light);
+    color: var(--color-primary);
+  }
+
+  &.green {
+    background-color: var(--bg-approved);
+    color: var(--status-approved);
+  }
+
+  &.orange {
+    background-color: var(--bg-pending);
+    color: var(--status-pending);
+  }
+
+  &.red {
+    background-color: var(--bg-rejected);
+    color: var(--status-rejected);
+  }
+}
+
+/* DASHBOARD GRID */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 960px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.grid-card {
+  border-radius: 12px;
+  background-color: var(--bg-surface);
+  height: 100%;
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.card-subtitle {
+  margin-top: 2px;
+  color: var(--text-secondary);
+}
+
+.card-body {
+  padding-top: 16px !important;
+}
+
+/* PENDENTES LIST */
+.pendentes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pendente-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: var(--bg-rejected);
+  border-left: 4px solid var(--status-rejected);
+  border-radius: 6px;
+}
+
+.item-main {
+  display: flex;
+  flex-direction: column;
+}
+
+.protocolo {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.aluno-nome {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.tipo-servico {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.item-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.data-abertura {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.empty-pendentes {
+  text-align: center;
+  padding: 32px;
+  color: var(--status-approved);
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+  }
+
+  p {
+    margin-top: 8px;
+    font-weight: 500;
+  }
+}
+
+/* RESUMO TABELA */
+.resumo-table {
+  width: 100%;
+  background: transparent;
+}
+
+.text-center {
+  text-align: center;
+}
+
+/* TAXA PROGRESS */
+.progress-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+
+  strong {
+    color: var(--text-primary);
+  }
+}
+
+.custom-progress {
+  height: 10px;
+  border-radius: 5px;
+  overflow: hidden;
+
+  --mdc-linear-progress-active-indicator-color: var(--color-primary);
+  --mdc-linear-progress-track-color: var(--color-primary-light);
+}
+
+.status-chip {
+  display: inline-block;
+  padding: 4px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 16px;
+  min-width: 32px;
+  text-align: center;
+
+  &.chip-total {
+    background-color: var(--bg-total);
+    color: var(--text-secondary);
+  }
+
+  &.chip-success {
+    background-color: var(--bg-approved);
+    color: var(--status-approved);
+  }
+
+  &.chip-warning {
+    background-color: var(--bg-pending);
+    color: var(--status-pending);
+  }
+
+  &.chip-danger {
+    background-color: var(--bg-rejected);
+    color: var(--status-rejected);
+  }
+}

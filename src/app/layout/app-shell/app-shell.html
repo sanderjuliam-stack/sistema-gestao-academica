@@ -1,0 +1,41 @@
+<mat-sidenav-container class="sidenav-container" autosize>
+  <!-- Menu Lateral (Sidenav) -->
+  <mat-sidenav 
+    mode="side" 
+    opened 
+    [class.collapsed]="isCollapsed()" 
+    class="app-sidenav">
+    
+    <!-- Branding / Logo -->
+    <div class="logo-container">
+      <button mat-icon-button (click)="toggleSidenav()" aria-label="Alternar menu">
+        <mat-icon class="maticon-menu">menu</mat-icon>
+      </button>
+    </div>
+
+    <!-- Lista de Links -->
+    <mat-nav-list class="nav-list">
+      @for (item of navItems(); track item.route) {
+        <a 
+          mat-list-item 
+          [routerLink]="item.route" 
+          routerLinkActive="active-link"
+          [matTooltip]="isCollapsed() ? item.label : ''"
+          matTooltipPosition="right"
+          class="nav-item">
+          <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+          @if (!isCollapsed()) {
+            <span matListItemTitle>{{ item.label }}</span>
+          }
+        </a>
+      }
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <!-- Conteúdo Principal -->
+  <mat-sidenav-content class="main-content">
+    <main class="page-container">
+      <router-outlet></router-outlet>
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>

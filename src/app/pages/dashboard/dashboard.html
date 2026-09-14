@@ -1,0 +1,226 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Painel de Controle</h1>
+    <p class="page-subtitle">Visão geral das solicitações acadêmicas e indicadores do sistema</p>
+  </div>
+  <button
+    class="header-button"
+    mat-flat-button
+    color="primary"
+    (click)="irParaSolicitacoes()"
+    aria-label="Ver todas as solicitações de documentos">
+    <mat-icon>assignment</mat-icon>
+    <span>Ver Todas as Solicitações</span>
+  </button>
+</div>
+
+<!-- CARDS DE KPIS -->
+<div class="kpi-grid">
+  <mat-card class="kpi-card total">
+    <mat-card-content class="kpi-content">
+      <div class="kpi-info">
+        <span class="kpi-label">Total de Pedidos</span>
+        <span class="kpi-value">{{ kpis().total }}</span>
+      </div>
+      <div class="kpi-icon-wrapper blue" aria-hidden="true">
+        <mat-icon>inventory_2</mat-icon>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card class="kpi-card realizados">
+    <mat-card-content class="kpi-content">
+      <div class="kpi-info">
+        <span class="kpi-label">Realizados</span>
+        <span class="kpi-value">{{ kpis().realizados }}</span>
+      </div>
+      <div class="kpi-icon-wrapper green" aria-hidden="true">
+        <mat-icon>check_circle</mat-icon>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card class="kpi-card em-andamento">
+    <mat-card-content class="kpi-content">
+      <div class="kpi-info">
+        <span class="kpi-label">Em Andamento</span>
+        <span class="kpi-value">{{ kpis().emAndamento }}</span>
+      </div>
+      <div class="kpi-icon-wrapper orange" aria-hidden="true">
+        <mat-icon>pending</mat-icon>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card class="kpi-card pendentes">
+    <mat-card-content class="kpi-content">
+      <div class="kpi-info">
+        <span class="kpi-label">Pendentes</span>
+        <span class="kpi-value">{{ kpis().pendentes }}</span>
+      </div>
+      <div class="kpi-icon-wrapper red" aria-hidden="true">
+        <mat-icon>error_outline</mat-icon>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>
+
+<!-- SEÇÃO PRINCIPAL COM DUAS COLUNAS -->
+<div class="dashboard-grid">
+  <!-- COLUNA DA ESQUERDA: AÇÕES PENDENTES RÁPIDAS -->
+  <mat-card class="grid-card">
+    <mat-card-header>
+      <mat-card-title class="card-title">
+        <mat-icon color="warn">warning</mat-icon>
+        <span>Ações Pendentes Rápidas</span>
+      </mat-card-title>
+      <mat-card-subtitle class="card-subtitle">Últimos pedidos aguardando emissão/aprovação</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content class="card-body">
+      @if (pendentes().length > 0) {
+        <div class="pendentes-list">
+          @for (item of pendentes(); track item.id) {
+            <div class="pendente-item">
+              <div class="item-main">
+                <span class="protocolo">#{{ item.id }}</span>
+                <strong class="aluno-nome">{{ item.alunoNome }}</strong>
+                <span class="tipo-servico">{{ formatarTipoDoc(item.tipoDocumento) }}</span>
+              </div>
+
+              <div class="item-actions">
+                <span class="data-abertura">{{ item.dataSolicitacao | date:'dd/MM/yyyy' }}</span>
+                <button
+                  mat-stroked-button
+                  color="primary"
+                  matTooltip="Abrir detalhes no painel de solicitações"
+                  (click)="irParaSolicitacoes(item.id)"
+                  [attr.aria-label]="'Atender solicitação #' + item.id + ' de ' + item.alunoNome">
+                  Atender
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="empty-pendentes">
+          <mat-icon>verified</mat-icon>
+          <p>Nenhuma solicitação pendente no momento!</p>
+        </div>
+      }
+    </mat-card-content>
+  </mat-card>
+
+  <!-- COLUNA DA DIREITA: RESUMO MENSAL + BARRAS VISUAIS -->
+  <div class="right-column">
+    <!-- RESUMO MENSAL -->
+    <mat-card class="grid-card">
+      <mat-card-header class="header-com-filtro">
+        <div>
+          <mat-card-title class="card-title">
+            <mat-icon color="primary">calendar_month</mat-icon>
+            <span>Resumo Mensal</span>
+          </mat-card-title>
+          <mat-card-subtitle class="card-subtitle">Volume de pedidos agrupados por mês</mat-card-subtitle>
+        </div>
+
+        <!-- FILTRO DE MÊS INTEGRADO -->
+        <mat-form-field appearance="outline" class="filtro-mes-field">
+          <mat-label>Filtrar por Mês</mat-label>
+          <mat-select
+            [value]="mesSelecionado()"
+            (selectionChange)="onMesChange($event.value)"
+            aria-label="Filtrar resumo por mês">
+            <mat-option value="">Todos os Meses</mat-option>
+            @for (mes of opcoesMeses(); track mes.valor) {
+              <mat-option [value]="mes.valor">{{ mes.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </mat-card-header>
+
+      <mat-card-content class="card-body">
+        <table mat-table [dataSource]="resumoMensal()" class="resumo-table" aria-label="Tabela de resumo mensal de solicitações">
+
+          <!-- Mês/Ano -->
+          <ng-container matColumnDef="mesAno">
+            <th mat-header-cell *matHeaderCellDef>Mês/Ano</th>
+            <td mat-cell *matCellDef="let row">
+              <strong>{{ row.mesAnoFormatado }}</strong>
+            </td>
+          </ng-container>
+
+          <!-- Total -->
+          <ng-container matColumnDef="total">
+            <th mat-header-cell *matHeaderCellDef class="text-center">Total</th>
+            <td mat-cell *matCellDef="let row" class="text-center">
+              <span class="status-chip chip-total">{{ row.total }}</span>
+            </td>
+          </ng-container>
+
+          <!-- Concluídos -->
+          <ng-container matColumnDef="concluidos">
+            <th mat-header-cell *matHeaderCellDef class="text-center">Concluídos</th>
+            <td mat-cell *matCellDef="let row" class="text-center">
+              <span class="status-chip chip-success">{{ row.concluidos }}</span>
+            </td>
+          </ng-container>
+
+          <!-- Em Andamento -->
+          <ng-container matColumnDef="emAndamento">
+            <th mat-header-cell *matHeaderCellDef class="text-center">Em Andamento</th>
+            <td mat-cell *matCellDef="let row" class="text-center">
+              <span class="status-chip chip-warning">{{ row.emAndamento }}</span>
+            </td>
+          </ng-container>
+
+          <!-- Pendentes -->
+          <ng-container matColumnDef="pendentes">
+            <th mat-header-cell *matHeaderCellDef class="text-center">Pendentes</th>
+            <td mat-cell *matCellDef="let row" class="text-center">
+              <span class="status-chip chip-danger">{{ row.pendentes }}</span>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="['mesAno', 'total', 'concluidos', 'emAndamento', 'pendentes']"></tr>
+          <tr mat-row *matRowDef="let row; columns: ['mesAno', 'total', 'concluidos', 'emAndamento', 'pendentes'];"></tr>
+        </table>
+
+        @if (resumoMensal().length === 0) {
+          <div class="empty-pendentes" style="padding: 2rem 0;">
+            <mat-icon>calendar_today</mat-icon>
+            <p>Nenhuma solicitação registrada no mês selecionado.</p>
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <!-- GRÁFICO VISUAL DE TAXA DE RESOLUÇÃO -->
+    <mat-card class="grid-card">
+      <mat-card-header>
+        <mat-card-title class="card-title">
+          <mat-icon color="primary">donut_large</mat-icon>
+          <span>Taxa de Resolução</span>
+        </mat-card-title>
+      </mat-card-header>
+
+      <mat-card-content class="card-body">
+        <div class="progress-section">
+          <div class="progress-info">
+            <span>Taxa de Conclusão Global</span>
+            <strong>{{ taxaConclusao() }}%</strong>
+          </div>
+          <mat-progress-bar
+            mode="determinate"
+            [value]="taxaConclusao()"
+            class="custom-progress"
+            [attr.aria-valuenow]="taxaConclusao()"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-label="Barra de progresso da taxa de conclusão global">
+          </mat-progress-bar>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

@@ -1,0 +1,113 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Corpo Docente</h1>
+    <p class="page-subtitle">Gerencie os professores e suas respectivas titulações.</p>
+  </div>
+  <button mat-raised-button color="primary" (click)="abrirModalNovoDocente()" aria-label="Cadastrar novo docente">
+    <mat-icon>person_add</mat-icon>
+    <span>Novo Docente</span>
+  </button>
+</div>
+
+<!-- Filtro -->
+<div class="filter-card">
+  <mat-form-field appearance="outline" class="search-field">
+    <mat-label>Buscar por Nome, E-mail ou Titulação</mat-label>
+    <mat-icon matPrefix>search</mat-icon>
+    <input matInput (keyup)="aplicarFiltroTexto($event)" placeholder="Ex: Dr. Carlos" aria-label="Campo de busca de docentes">
+  </mat-form-field>
+</div>
+
+<!-- Tabela de Docentes -->
+<div class="table-container mat-elevation-z1">
+  <table mat-table [dataSource]="dataSource" matSort aria-label="Tabela do corpo docente">
+
+    <!-- COLUNA DE CHECKBOX (MODO DE SELEÇÃO) -->
+    <ng-container matColumnDef="select">
+      <th mat-header-cell *matHeaderCellDef class="checkbox-col">
+        <mat-checkbox
+          (change)="$event ? toggleAllRows() : null"
+          [checked]="selection.hasValue() && isAllSelected()"
+          [indeterminate]="selection.hasValue() && !isAllSelected()"
+          aria-label="Selecionar todos os docentes">
+        </mat-checkbox>
+      </th>
+      <td mat-cell *matCellDef="let row" class="checkbox-col">
+        <mat-checkbox
+          (click)="$event.stopPropagation()"
+          (change)="$event ? selection.toggle(row) : null"
+          [checked]="selection.isSelected(row)"
+          [attr.aria-label]="'Selecionar docente ' + row.nome">
+        </mat-checkbox>
+      </td>
+    </ng-container>
+
+    <!-- Coluna Nome -->
+    <ng-container matColumnDef="nome">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Nome</th>
+      <td mat-cell *matCellDef="let row">
+        <strong>{{ row.nome }}</strong>
+      </td>
+    </ng-container>
+
+    <!-- Coluna E-mail -->
+    <ng-container matColumnDef="email">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>E-mail</th>
+      <td mat-cell *matCellDef="let row">{{ row.email || 'Não informado' }}</td>
+    </ng-container>
+
+    <!-- Coluna Titulação -->
+    <ng-container matColumnDef="titulacao">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Titulação</th>
+      <td mat-cell *matCellDef="let row">
+        <mat-chip-option [selectable]="false" class="titulacao-chip">
+          {{ row.titulacao }}
+        </mat-chip-option>
+      </td>
+    </ng-container>
+
+    <!-- Coluna Ações -->
+    <ng-container matColumnDef="acoes">
+      <th mat-header-cell *matHeaderCellDef class="text-right">Ações</th>
+      <td mat-cell *matCellDef="let row" class="text-right">
+        <button 
+          mat-icon-button 
+          color="primary" 
+          matTooltip="Editar Docente" 
+          (click)="editarDocente(row)"
+          [attr.aria-label]="'Editar docente ' + row.nome">
+          <mat-icon>edit</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns()"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns();"></tr>
+  </table>
+
+  <div class="table-footer-bar">
+    <div class="table-actions">
+      @if (!modoSelecao()) {
+        <button mat-stroked-button color="primary" (click)="ativarModoSelecao()" aria-label="Ativar modo de seleção múltipla">
+          <mat-icon>check_box</mat-icon> Selecionar
+        </button>
+      } @else {
+        <div class="active-actions">
+          <button mat-button (click)="cancelarModoSelecao()" aria-label="Cancelar seleção">
+            Cancelar
+          </button>
+          <button
+            mat-flat-button
+            color="warn"
+            [disabled]="selection.isEmpty()"
+            (click)="abrirDialogDelecao()"
+            [attr.aria-label]="'Deletar ' + selection.selected.length + ' docentes selecionados'">
+            <mat-icon>delete</mat-icon> Deletar ({{ selection.selected.length }})
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+
+  <mat-paginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons aria-label="Navegação da paginação de docentes"></mat-paginator>
+</div>

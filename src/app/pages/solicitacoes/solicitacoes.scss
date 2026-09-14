@@ -1,0 +1,207 @@
+.filter-card {
+  background: var(--bg-surface);
+  padding: 1.25rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+
+  .filters-row {
+    display: flex;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+    align-items: center;
+
+    .search-field {
+      flex: 3;
+      min-width: 380px;
+    }
+
+    .date-range-field {
+      flex: 2;
+      min-width: 300px;
+      mat-datepicker-toggle {
+        color: var(--color-primary);
+      }
+    }
+  }
+}
+
+.status-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chip-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 2px 0;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.table-container {
+  background-color: var(--bg-surface);
+  border-radius: 12px;
+  overflow: hidden;
+
+  table {
+    width: 100%;
+  }
+}
+
+.checkbox-col {
+  width: 48px;
+  padding-left: 16px !important;
+}
+
+.aluno-info {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0;
+
+  .aluno-nome {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .aluno-sub {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+  }
+}
+
+.doc-badge {
+  background-color: var(--bg-repo);
+  color: var(--text-secondary);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* Alinhamento dos grupos de status/entrega com o botão de ações */
+.cell-action-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  span {
+    width: 90px;
+    text-align: center;
+  }
+
+  .btn-more {
+    width: 32px;
+    height: 32px;
+    line-height: 32px;
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+  }
+}
+
+/* Badges e pílulas de Status */
+.status-pill {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+
+  &.pendente {
+    background-color: var(--bg-pending);
+    color: var(--status-pending);
+    border: 1px solid var(--status-pending);
+  }
+
+  &.solicitado {
+    background-color: var(--color-primary-light);
+    color: var(--color-primary-hover);
+    border: 1px solid var(--color-primary-hover);
+  }
+
+  &.emitido {
+    background-color: var(--bg-approved);
+    color: var(--status-approved);
+    border: 1px solid var(--status-approved);
+  }
+}
+
+.delivery-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+
+  mat-icon {
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+  }
+
+  &.success {
+    color: var(--status-approved);
+    mat-icon {
+      color: var(--status-approved);
+    }
+  }
+
+  &.pending {
+    color: var(--color-primary);
+  }
+}
+
+/* Ícones padronizados para o MatMenu */
+.status-icon {
+  &.pendente {
+    color: var(--status-pending);
+  }
+  &.solicitado {
+    color: var(--color-primary-hover);
+  }
+  &.emitido {
+    color: var(--status-approved);
+  }
+}
+
+#entrega-icon {
+  color: var(--status-approved);
+}
+
+.empty-table-cell {
+  padding: 2rem 0;
+  text-align: center;
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: var(--text-secondary);
+
+    mat-icon {
+      font-size: 36px;
+      width: 36px;
+      height: 36px;
+      margin-bottom: 0.5rem;
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.95rem;
+    }
+  }
+}

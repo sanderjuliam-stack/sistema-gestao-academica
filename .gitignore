@@ -1,4 +1,4 @@
-# See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+# See https://docs.github.com/get-started/getting-started-with-git/ignoring-files
 
 # Compiled output
 /dist
@@ -10,6 +10,7 @@
 /node_modules
 npm-debug.log
 yarn-error.log
+pnpm-debug.log
 
 # IDEs and editors
 .idea/
@@ -19,8 +20,10 @@ yarn-error.log
 *.launch
 .settings/
 *.sublime-workspace
+.prettierrc
 
 # Visual Studio Code
+# Opção A: Compartilhar configurações do projeto no VSCode (Comportamento Atual)
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
@@ -28,6 +31,14 @@ yarn-error.log
 !.vscode/extensions.json
 !.vscode/mcp.json
 .history/*
+
+# Opção B: Se preferir ignorar a pasta .vscode por completo, troque o bloco acima por:
+# .vscode/
+
+# Environment variables & secrets
+.env
+.env.*
+!.env.example
 
 # Miscellaneous
 /.angular/cache

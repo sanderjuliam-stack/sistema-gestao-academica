@@ -1,0 +1,132 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Cursos e Disciplinas</h1>
+    <p class="page-subtitle">Gerencie os cursos oferecidos e a grade curricular.</p>
+  </div>
+  <button mat-raised-button color="primary" (click)="abrirModalNovoCurso()" aria-label="Cadastrar novo curso">
+    <mat-icon>add</mat-icon>
+    <span>Novo Curso</span>
+  </button>
+</div>
+
+<!-- Filtro -->
+<div class="filter-card">
+  <mat-form-field appearance="outline" class="search-field">
+    <mat-label>Buscar por Nome, Área ou Instituição</mat-label>
+    <mat-icon matPrefix>search</mat-icon>
+    <input matInput (keyup)="aplicarFiltroTexto($event)" placeholder="Ex: Engenharia" aria-label="Campo de busca de cursos">
+  </mat-form-field>
+</div>
+
+<!-- Tabela de Cursos -->
+<div class="table-container mat-elevation-z1">
+  <table mat-table [dataSource]="dataSource" matSort aria-label="Tabela de cursos e disciplinas">
+
+    <!-- COLUNA DE CHECKBOX (MODO DE SELEÇÃO) -->
+    <ng-container matColumnDef="select">
+      <th mat-header-cell *matHeaderCellDef class="checkbox-col">
+        <mat-checkbox
+          (change)="$event ? toggleAllRows() : null"
+          [checked]="selection.hasValue() && isAllSelected()"
+          [indeterminate]="selection.hasValue() && !isAllSelected()"
+          aria-label="Selecionar todos os cursos">
+        </mat-checkbox>
+      </th>
+      <td mat-cell *matCellDef="let row" class="checkbox-col">
+        <mat-checkbox
+          (click)="$event.stopPropagation()"
+          (change)="$event ? selection.toggle(row) : null"
+          [checked]="selection.isSelected(row)"
+          [attr.aria-label]="'Selecionar curso ' + row.nome">
+        </mat-checkbox>
+      </td>
+    </ng-container>
+
+    <!-- Coluna Nome -->
+    <ng-container matColumnDef="nome">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Nome</th>
+      <td mat-cell *matCellDef="let row">
+        <strong>{{ row.nome }}</strong>
+        @if (row.disciplinas?.length) {
+          <div class="sub-info">{{ row.disciplinas.length }} disciplina(s) cadastrada(s)</div>
+        }
+      </td>
+    </ng-container>
+
+    <!-- Coluna Área do Conhecimento -->
+    <ng-container matColumnDef="areaConhecimento">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Área do Conhecimento</th>
+      <td mat-cell *matCellDef="let row">
+        {{ row.areaConhecimento || '-' }}
+      </td>
+    </ng-container>
+
+    <!-- Coluna Instituição -->
+    <ng-container matColumnDef="instituicao">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Instituição</th>
+      <td mat-cell *matCellDef="let row">
+        {{ row.instituicao || '-' }}
+      </td>
+    </ng-container>
+
+    <!-- Coluna Nível -->
+    <ng-container matColumnDef="nivel">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Nível</th>
+      <td mat-cell *matCellDef="let row">
+        <mat-chip-option [selectable]="false" class="nivel-chip">
+          {{ row.nivel === 'POS_GRADUACAO' ? 'Pós-Graduação' : (row.nivel === 'GRADUACAO' ? 'Graduação' : row.nivel) }}
+        </mat-chip-option>
+      </td>
+    </ng-container>
+
+    <!-- Coluna Carga Horária Total -->
+    <ng-container matColumnDef="cargaHorariaTotal">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Carga Horária Total</th>
+      <td mat-cell *matCellDef="let row">{{ row.cargaHorariaTotal }}h</td>
+    </ng-container>
+
+    <!-- Coluna Ações -->
+    <ng-container matColumnDef="acoes">
+      <th mat-header-cell *matHeaderCellDef class="text-right">Ações</th>
+      <td mat-cell *matCellDef="let row" class="text-right">
+        <button
+          mat-icon-button
+          color="primary"
+          matTooltip="Editar Curso"
+          (click)="editarCurso(row)"
+          [attr.aria-label]="'Editar curso ' + row.nome">
+          <mat-icon>edit</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns()"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns();"></tr>
+  </table>
+
+  <div class="table-footer-bar">
+    <div class="table-actions">
+      @if (!modoSelecao()) {
+        <button mat-stroked-button color="primary" (click)="ativarModoSelecao()" aria-label="Ativar modo de seleção múltipla">
+          <mat-icon>check_box</mat-icon> Selecionar
+        </button>
+      } @else {
+        <div class="active-actions">
+          <button mat-button (click)="cancelarModoSelecao()" aria-label="Cancelar seleção">
+            Cancelar
+          </button>
+          <button
+            mat-flat-button
+            color="warn"
+            [disabled]="selection.isEmpty()"
+            (click)="abrirDialogDelecao()"
+            [attr.aria-label]="'Deletar ' + selection.selected.length + ' cursos selecionados'">
+            <mat-icon>delete</mat-icon> Deletar ({{ selection.selected.length }})
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+
+  <mat-paginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons aria-label="Navegação da paginação de cursos"></mat-paginator>
+</div>

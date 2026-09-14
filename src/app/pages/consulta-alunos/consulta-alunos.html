@@ -1,0 +1,518 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Consultas & Planilhas</h1>
+    <p class="page-subtitle">
+      Realize consultas e construa planilhas personalizadas. <br />
+      Clique em uma linha da tabela para obter um resumo lateral.
+    </p>
+  </div>
+  <div class="header-actions">
+    <!-- GERENCIADOR DE COLUNAS OPCIONAIS -->
+    <button
+      mat-stroked-button
+      [matMenuTriggerFor]="columnsMenu"
+      aria-label="Gerenciar colunas opcionais da tabela">
+      <mat-icon>view_column</mat-icon>
+      Colunas Opcionais ({{ totalColunasOpcionaisVisiveis() }})
+    </button>
+
+    <mat-menu #columnsMenu="matMenu" class="columns-menu" xPosition="before">
+      <div class="menu-header" (click)="$event.stopPropagation()">
+        <span>Personalizar Colunas</span>
+        <button mat-button color="primary" (click)="resetarColunas()">Resetar</button>
+      </div>
+      <mat-divider></mat-divider>
+
+      <div
+        cdkDropList
+        class="columns-drag-list"
+        (cdkDropListDropped)="reordenarColunas($event)"
+        (click)="$event.stopPropagation()">
+        @for (col of colunasOpcionais(); track col.id) {
+          <div class="column-drag-item" cdkDrag>
+            <mat-icon cdkDragHandle class="drag-handle" aria-label="Arrastar para reordenar">drag_indicator</mat-icon>
+            <mat-checkbox
+              [checked]="col.visivel"
+              (change)="alternarVisibilidadeColuna(col.id)">
+              {{ col.label }}
+            </mat-checkbox>
+          </div>
+        }
+      </div>
+    </mat-menu>
+
+    <!-- EXPORTAR -->
+    <button
+      mat-flat-button
+      color="primary"
+      (click)="exportarExcel()"
+      aria-label="Exportar dados filtrados para planilha Excel">
+      <mat-icon>download</mat-icon>
+      Exportar XLSX
+    </button>
+  </div>
+</div>
+
+<mat-drawer-container class="drawer-container" [hasBackdrop]="false">
+  <mat-drawer-content class="main-content">
+    <!-- BARRA SUPERIOR: BUSCA -->
+    <header class="header-bar">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-icon matPrefix>search</mat-icon>
+        <mat-label>Buscar por Nome, CPF ou Curso</mat-label>
+        <input
+          matInput
+          [ngModel]="termoBusca()"
+          (ngModelChange)="termoBusca.set($event)"
+          placeholder="Digite para filtrar..."
+          aria-label="Buscar alunos por nome, CPF ou curso"
+        />
+        @if (termoBusca()) {
+          <button matSuffix mat-icon-button (click)="termoBusca.set('')" aria-label="Limpar busca">
+            <mat-icon>clear</mat-icon>
+          </button>
+        }
+      </mat-form-field>
+    </header>
+
+    <!-- FILTROS SECUNDÁRIOS -->
+    <section class="filters-bar" aria-label="Filtros avançados de consulta">
+      <mat-form-field appearance="outline" class="filter-item">
+        <mat-label>Situação Cert./Dec.</mat-label>
+        <mat-select
+          [ngModel]="filtroStatusDoc()"
+          (ngModelChange)="filtroStatusDoc.set($event)"
+          aria-label="Filtrar por situação da documentação">
+          <mat-option value="">Todas</mat-option>
+          <mat-option value="PENDENTE">Pendente</mat-option>
+          <mat-option value="EM_ANDAMENTO">Em Andamento</mat-option>
+          <mat-option value="CONCLUIDO">Concluído</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-item">
+        <mat-label>Solicitação (De)</mat-label>
+        <input
+          matInput
+          type="date"
+          [ngModel]="filtroDataSolicitacaoInicio()"
+          (ngModelChange)="filtroDataSolicitacaoInicio.set($event)"
+          aria-label="Data inicial do período de solicitação"
+        />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-item">
+        <mat-label>Solicitação (Até)</mat-label>
+        <input
+          matInput
+          type="date"
+          [ngModel]="filtroDataSolicitacaoFim()"
+          (ngModelChange)="filtroDataSolicitacaoFim.set($event)"
+          aria-label="Data final do período de solicitação"
+        />
+      </mat-form-field>
+
+      @if (filtroStatusDoc() || termoBusca() || filtroDataSolicitacaoInicio() || filtroDataSolicitacaoFim()) {
+        <button mat-button color="warn" class="btn-clear" (click)="limparFiltros()" aria-label="Limpar todos os filtros aplicados">
+          <mat-icon>filter_alt_off</mat-icon>
+          Limpar Filtros
+        </button>
+      }
+    </section>
+
+    <!-- TABELA -->
+    <main class="table-card">
+      <table mat-table [dataSource]="alunosFiltrados()" class="clean-table" aria-label="Tabela de consulta de alunos e documentações">
+        <!-- COLUNAS OBRIGATÓRIAS -->
+        <ng-container matColumnDef="nome">
+          <th mat-header-cell *matHeaderCellDef>Nome</th>
+          <td mat-cell *matCellDef="let aluno" class="font-medium whitespace-nowrap">
+            {{ aluno.nome }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="cpf">
+          <th mat-header-cell *matHeaderCellDef>CPF</th>
+          <td mat-cell *matCellDef="let aluno" class="text-muted whitespace-nowrap">
+            {{ aluno.cpf }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="curso">
+          <th mat-header-cell *matHeaderCellDef>Curso</th>
+          <td mat-cell *matCellDef="let aluno" class="whitespace-nowrap">
+            {{ aluno.matriculas[0]?.cursoNome || '-' }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="situacaoDocumentacao">
+          <th mat-header-cell *matHeaderCellDef>Situação Cert./Dec.</th>
+          <td mat-cell *matCellDef="let aluno">
+            @let status = calcularStatusGeralDoc(aluno);
+            @if (status === 'CONCLUIDO') {
+              <span class="tag-concluido">
+                <mat-icon>check_circle</mat-icon>
+                Concluído
+              </span>
+            } @else if (status === 'EM_ANDAMENTO') {
+              <span class="tag-andamento">
+                <mat-icon>hourglass_bottom</mat-icon>
+                Em Andamento
+              </span>
+            } @else {
+              <span class="tag-pendente">
+                <mat-icon>pending</mat-icon>
+                Pendente
+              </span>
+            }
+          </td>
+        </ng-container>
+
+        <!-- COLUNAS OPCIONAIS DINÂMICAS -->
+        <ng-container matColumnDef="email">
+          <th mat-header-cell *matHeaderCellDef>E-mail</th>
+          <td mat-cell *matCellDef="let aluno">{{ aluno.email }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="dataNascimento">
+          <th mat-header-cell *matHeaderCellDef>Data Nascimento</th>
+          <td mat-cell *matCellDef="let aluno">{{ aluno.dataNascimento || '-' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="naturalidadeCidade">
+          <th mat-header-cell *matHeaderCellDef>Cidade Natal</th>
+          <td mat-cell *matCellDef="let aluno">{{ aluno.naturalidadeCidade || '-' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="naturalidadeUf">
+          <th mat-header-cell *matHeaderCellDef>UF</th>
+          <td mat-cell *matCellDef="let aluno">{{ aluno.naturalidadeUf || '-' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="areaConhecimento">
+          <th mat-header-cell *matHeaderCellDef>Área do Conhecimento</th>
+          <td mat-cell *matCellDef="let aluno">
+            {{ obterAreaConhecimento(aluno.matriculas[0]) }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="cargaHorariaTotal">
+          <th mat-header-cell *matHeaderCellDef>Carga Horária (h)</th>
+          <td mat-cell *matCellDef="let aluno">
+            {{ obterCargaHoraria(aluno.matriculas[0]) }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="frequenciaGeral">
+          <th mat-header-cell *matHeaderCellDef>Freq. Geral</th>
+          <td mat-cell *matCellDef="let aluno">
+            @let freq = aluno.matriculas[0]?.frequenciaGeralPct;
+            {{ freq !== undefined && freq !== null ? freq + '%' : '-' }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="dataInicio">
+          <th mat-header-cell *matHeaderCellDef>Data Início</th>
+          <td mat-cell *matCellDef="let aluno">{{ aluno.matriculas[0]?.dataInicio || '-' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="dataTermino">
+          <th mat-header-cell *matHeaderCellDef>Data Término</th>
+          <td mat-cell *matCellDef="let aluno">{{ aluno.matriculas[0]?.dataTermino || '-' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="linkDrive">
+          <th mat-header-cell *matHeaderCellDef>Pasta Drive</th>
+          <td mat-cell *matCellDef="let aluno">
+            @let link = aluno.matriculas[0]?.linkDocumentos;
+            @if (link) {
+              <a
+                [href]="link"
+                target="_blank"
+                rel="noopener noreferrer"
+                mat-icon-button
+                color="primary"
+                matTooltip="Abrir Pasta no Drive"
+                aria-label="Abrir Pasta do Drive em nova guia">
+                <mat-icon class="blue-icon">folder_shared</mat-icon>
+              </a>
+            } @else {
+              -
+            }
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="repoLocalDocs">
+          <th mat-header-cell *matHeaderCellDef>Repo Docs</th>
+          <td mat-cell *matCellDef="let aluno">
+            <button
+              mat-icon-button
+              color="primary"
+              matTooltip="Ver repositório de documentos"
+              [attr.aria-label]="'Ver repositório de documentos de ' + aluno.nome"
+              (click)="abrirRepositorioDocumentos(aluno); $event.stopPropagation()">
+              <mat-icon class="blue-icon">description</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <!-- DECLARAÇÃO -->
+        <ng-container matColumnDef="decStatus">
+          <th mat-header-cell *matHeaderCellDef>Declaração: Status</th>
+          <td mat-cell *matCellDef="let aluno">
+            {{ obterStatusDocumentos(aluno).solicitacaoDeclaracao?.statusEmissao || 'NÃO SOLICITADO' }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="decDataEmissao">
+          <th mat-header-cell *matHeaderCellDef>Declaração: Data Emissão</th>
+          <td mat-cell *matCellDef="let aluno">
+            {{ obterStatusDocumentos(aluno).solicitacaoDeclaracao?.dataEmissao || '-' }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="decEntregue">
+          <th mat-header-cell *matHeaderCellDef>Declaração: Entregue</th>
+          <td mat-cell *matCellDef="let aluno">
+            {{ obterStatusDocumentos(aluno).declaracaoEntregue ? 'Sim' : 'Não' }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="decFormaEntrega">
+          <th mat-header-cell *matHeaderCellDef>Declaração: Forma Entrega</th>
+          <td mat-cell *matCellDef="let aluno">
+            {{ obterStatusDocumentos(aluno).solicitacaoDeclaracao?.formaEntrega || '-' }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="decObs">
+          <th mat-header-cell *matHeaderCellDef>Declaração: Obs</th>
+          <td mat-cell *matCellDef="let aluno">
+            {{ obterStatusDocumentos(aluno).solicitacaoDeclaracao?.observacoes || '-' }}
+          </td>
+        </ng-container>
+
+        <!-- CERTIFICADO -->
+        <ng-container matColumnDef="certStatus">
+          <th mat-header-cell *matHeaderCellDef>Certificado: Status</th>
+          <td mat-cell *matCellDef="let aluno">
+            {{ obterStatusDocumentos(aluno).solicitacaoCertificado?.statusEmissao || 'NÃO SOLICITADO' }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="certDataEmissao">
+          <th mat-header-cell *matHeaderCellDef>Certificado: Data Emissão</th>
+          <td mat-cell *matCellDef="let aluno">
+            {{ obterStatusDocumentos(aluno).solicitacaoCertificado?.dataEmissao || '-' }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="certEntregue">
+          <th mat-header-cell *matHeaderCellDef>Certificado: Entregue</th>
+          <td mat-cell *matCellDef="let aluno">
+            {{ obterStatusDocumentos(aluno).certificadoEntregue ? 'Sim' : 'Não' }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="certFormaEntrega">
+          <th mat-header-cell *matHeaderCellDef>Certificado: Forma Entrega</th>
+          <td mat-cell *matCellDef="let aluno">
+            {{ obterStatusDocumentos(aluno).solicitacaoCertificado?.formaEntrega || '-' }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="certObs">
+          <th mat-header-cell *matHeaderCellDef>Certificado: Obs</th>
+          <td mat-cell *matCellDef="let aluno">
+            {{ obterStatusDocumentos(aluno).solicitacaoCertificado?.observacoes || '-' }}
+          </td>
+        </ng-container>
+
+        <!-- ACADÊMICO -->
+        <ng-container matColumnDef="mediasDisciplinas">
+          <th mat-header-cell *matHeaderCellDef>Média por Disciplina</th>
+          <td mat-cell *matCellDef="let aluno">
+            {{ formatarMediasDisciplinas(aluno) }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="tccInfo">
+          <th mat-header-cell *matHeaderCellDef>TCC (Título, Tema e Tipo)</th>
+          <td mat-cell *matCellDef="let aluno">
+            {{ formatarTcc(aluno) }}
+          </td>
+        </ng-container>
+
+        <!-- LINHAS COM ACESSIBILIDADE VIA TECLADO -->
+        <tr mat-header-row *matHeaderRowDef="todasColunasVisiveis(); sticky: true"></tr>
+        <tr
+          mat-row
+          *matRowDef="let row; columns: todasColunasVisiveis()"
+          class="clickable-row"
+          [class.selected-row]="alunoSelecionado()?.id === row.id"
+          tabindex="0"
+          role="button"
+          [attr.aria-label]="'Ver detalhes de ' + row.nome"
+          (click)="selecionarAluno(row)"
+          (keydown.enter)="selecionarAluno(row)"
+          (keydown.space)="selecionarAluno(row); $event.preventDefault()"
+        ></tr>
+
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell empty-table" [attr.colspan]="todasColunasVisiveis().length">
+            Nenhum aluno encontrado para os filtros selecionados.
+          </td>
+        </tr>
+      </table>
+    </main>
+  </mat-drawer-content>
+
+  <!-- FICHA LATERAL (DRAWER) -->
+  <mat-drawer
+    #drawer
+    position="end"
+    mode="over"
+    class="conference-drawer"
+    [opened]="alunoSelecionado() !== null"
+    (closed)="alunoSelecionado.set(null)"
+    aria-label="Painel de resumo e conferência do aluno">
+    @if (alunoSelecionado(); as aluno) {
+      @let matricula = aluno.matriculas[0];
+      @let statusDoc = obterStatusDocumentos(aluno);
+
+      <div class="drawer-header">
+        <div class="user-avatar" aria-hidden="true">
+          {{ aluno.nome.charAt(0).toUpperCase() }}
+        </div>
+        <div class="user-info">
+          <h2>{{ aluno.nome }}</h2>
+          <p class="text-muted">CPF: {{ aluno.cpf }}</p>
+        </div>
+        <button mat-icon-button (click)="alunoSelecionado.set(null)" aria-label="Fechar painel lateral">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <div class="drawer-body">
+        <section class="drawer-section">
+          <div class="section-label">Conferência de Documentos</div>
+          <div class="doc-status-card" [class.doc-complete]="calcularStatusGeralDoc(aluno) === 'CONCLUIDO'">
+            <div class="doc-status-header">
+              @if (calcularStatusGeralDoc(aluno) === 'CONCLUIDO') {
+                <mat-icon class="icon-success">verified</mat-icon>
+                <span class="status-title text-success">DOCUMENTAÇÃO CONCLUÍDA</span>
+              } @else {
+                <mat-icon class="icon-warning">hourglass_top</mat-icon>
+                <span class="status-title text-warning">ENTREGA PENDENTE</span>
+              }
+            </div>
+
+            <div class="doc-items-list">
+              <div class="doc-item">
+                <mat-icon [class.check-active]="statusDoc.declaracaoEntregue">
+                  {{ statusDoc.declaracaoEntregue ? 'check_circle' : 'radio_button_unchecked' }}
+                </mat-icon>
+                <div class="doc-details">
+                  <span class="doc-name">Declaração de Conclusão</span>
+                  <span class="doc-sub">
+                    Status: {{ statusDoc.solicitacaoDeclaracao?.statusEmissao || 'NÃO SOLICITADO' }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="doc-item">
+                <mat-icon [class.check-active]="statusDoc.certificadoEntregue">
+                  {{ statusDoc.certificadoEntregue ? 'check_circle' : 'radio_button_unchecked' }}
+                </mat-icon>
+                <div class="doc-details">
+                  <span class="doc-name">Certificado / Diploma</span>
+                  <span class="doc-sub">
+                    Status: {{ statusDoc.solicitacaoCertificado?.statusEmissao || 'NÃO SOLICITADO' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="links-row">
+              @if (matricula && matricula.documentos && matricula.documentos.length > 0) {
+                <button
+                  type="button"
+                  class="link-button"
+                  (click)="abrirRepositorioDocumentos(aluno, matricula)"
+                  matTooltip="Abrir repositório de docs"
+                  [attr.aria-label]="'Abrir repositório de documentos com ' + matricula.documentos.length + ' arquivos'">
+                  <mat-icon>description</mat-icon>
+                  Repo Docs ({{ matricula.documentos.length }})
+                </button>
+              }
+              @if (matricula && matricula.linkDocumentos) {
+                <a
+                  [href]="matricula.linkDocumentos"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="link-button"
+                  matTooltip="Abrir Pasta no Drive"
+                  aria-label="Abrir pasta no Drive em nova aba">
+                  <mat-icon>folder_shared</mat-icon>
+                  Pasta Drive
+                </a>
+              }
+            </div>
+          </div>
+        </section>
+
+        <section class="drawer-section">
+          <div class="section-label">Informações Gerais</div>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">E-mail</span>
+              <span class="info-value">{{ aluno.email }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Naturalidade</span>
+              <span class="info-value">
+                {{ aluno.naturalidadeCidade || '-' }} / {{ aluno.naturalidadeUf || '-' }}
+              </span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Data de Nascimento</span>
+              <span class="info-value">{{ aluno.dataNascimento || '-' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Curso Atual</span>
+              <span class="info-value font-medium">{{ matricula?.cursoNome || '-' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Área do Conhecimento</span>
+              <span class="info-value">{{ obterAreaConhecimento(matricula) }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Carga Horária</span>
+              <span class="info-value">{{ obterCargaHoraria(matricula) }}</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="drawer-section">
+          <div class="section-label">Notas por Disciplina</div>
+          <div class="notas-card">
+            @if (matricula && matricula.notasDisciplinas && matricula.notasDisciplinas.length > 0) {
+              <ul class="notas-list">
+                @for (nota of matricula.notasDisciplinas; track nota.disciplinaId) {
+                  <li class="nota-item">
+                    <span class="disciplina-nome">{{ nota.disciplinaNome }}</span>
+                    <span class="nota-valor">{{ nota.notaFinal ?? 'N/A' }}</span>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="empty-notas">Não há notas cadastradas por disciplina</p>
+            }
+          </div>
+        </section>
+      </div>
+    }
+  </mat-drawer>
+</mat-drawer-container>

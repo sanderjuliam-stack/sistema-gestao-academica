@@ -1,0 +1,145 @@
+<div class="page-header">
+  <div>
+    <h2 class="page-title">Alunos & Matrículas</h2>
+    <p class="page-subtitle">Gerencie os alunos cadastrados e seus vínculos com os cursos.</p>
+  </div>
+  <button mat-raised-button class="novo-aluno-btn" (click)="abrirModalNovoAluno()" aria-label="Cadastrar novo aluno">
+    <mat-icon>person_add</mat-icon> 
+    <span>Novo Aluno</span>
+  </button>
+</div>
+
+<!-- Filtro -->
+<div class="filter-card">
+  <mat-form-field appearance="outline" class="search-field">
+    <mat-label>Buscar por Nome, CPF, E-mail ou Curso</mat-label>
+    <mat-icon matPrefix>search</mat-icon>
+    <input matInput (keyup)="aplicarFiltroTexto($event)" placeholder="Ex: Ana Clara" aria-label="Campo de busca de alunos">
+  </mat-form-field>
+</div>
+
+<!-- Tabela de Alunos -->
+<div class="table-container mat-elevation-z1">
+  <table mat-table [dataSource]="dataSource" matSort aria-label="Tabela de alunos cadastrados">
+    <!-- COLUNA DE CHECKBOX (MODO DE SELEÇÃO) -->
+    <ng-container matColumnDef="select">
+      <th mat-header-cell *matHeaderCellDef class="checkbox-col">
+        <mat-checkbox
+          (change)="$event ? toggleAllRows() : null"
+          [checked]="selection.hasValue() && isAllSelected()"
+          [indeterminate]="selection.hasValue() && !isAllSelected()"
+          aria-label="Selecionar todos os alunos">
+        </mat-checkbox>
+      </th>
+      <td mat-cell *matCellDef="let row" class="checkbox-col">
+        <mat-checkbox
+          (click)="$event.stopPropagation()"
+          (change)="$event ? selection.toggle(row) : null"
+          [checked]="selection.isSelected(row)"
+          [attr.aria-label]="'Selecionar aluno ' + row.nome">
+        </mat-checkbox>
+      </td>
+    </ng-container>
+    
+    <!-- Coluna Nome -->
+    <ng-container matColumnDef="nome">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header> Nome </th>
+      <td mat-cell *matCellDef="let row">
+        <div class="aluno-info">
+          <span class="aluno-nome">{{ row.nome }}</span>
+          <span class="aluno-sub">{{ row.naturalidadeCidade ? row.naturalidadeCidade + '/' + row.naturalidadeUf : '' }}</span>
+        </div>
+      </td>
+    </ng-container>
+
+    <!-- Coluna CPF -->
+    <ng-container matColumnDef="cpf">
+      <th mat-header-cell *matHeaderCellDef> CPF </th>
+      <td mat-cell *matCellDef="let row"> {{ row.cpf }} </td>
+    </ng-container>
+
+    <!-- Coluna E-mail -->
+    <ng-container matColumnDef="email">
+      <th mat-header-cell *matHeaderCellDef> E-mail </th>
+      <td mat-cell *matCellDef="let row"> {{ row.email }} </td>
+    </ng-container>
+
+    <!-- Coluna Curso Principal -->
+    <ng-container matColumnDef="cursoPrincipal">
+      <th mat-header-cell *matHeaderCellDef> Curso Ativo </th>
+      <td mat-cell *matCellDef="let row">
+        {{ row.matriculas?.[0]?.cursoNome || 'Sem matrícula' }}
+      </td>
+    </ng-container>
+
+    <!-- Coluna Ações -->
+    <ng-container matColumnDef="acoes">
+      <th mat-header-cell *matHeaderCellDef> Ações </th>
+      <td mat-cell *matCellDef="let row">
+        <div class="acoes-grid">
+          @if (row.matriculas?.[0]?.linkDocumentos) {
+            <a mat-icon-button [href]="row.matriculas[0].linkDocumentos" target="_blank" matTooltip="Pasta no Drive" [attr.aria-label]="'Abrir pasta do Drive de ' + row.nome">
+              <mat-icon color="primary">folder_shared</mat-icon>
+            </a>
+          }
+          <button
+            mat-icon-button
+            color="accent"
+            (click)="abrirDesempenhoAcademico(row)"
+            matTooltip="Frequência, Notas & TCC"
+            [attr.aria-label]="'Ver desempenho acadêmico de ' + row.nome"
+          >
+            <mat-icon>analytics</mat-icon>
+          </button>
+          <button 
+            mat-icon-button 
+            (click)="editarAluno(row)" 
+            matTooltip="Editar Aluno"
+            [attr.aria-label]="'Editar aluno ' + row.nome"
+          >
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button 
+            mat-icon-button 
+            color="primary" 
+            matTooltip="Ver Repositório de Documentos" 
+            (click)="abrirRepositorio(row)"
+            [attr.aria-label]="'Abrir repositório de documentos de ' + row.nome"
+          >
+            <mat-icon>description</mat-icon>
+          </button>
+        </div>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns()"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns();"></tr>
+  </table>
+
+  <div class="table-footer-bar">
+    <div class="table-actions">
+      @if (!modoSelecao()) {
+        <button mat-stroked-button color="primary" (click)="ativarModoSelecao()" aria-label="Ativar modo de seleção múltipla">
+          <mat-icon>check_box</mat-icon> Selecionar
+        </button>
+      } @else {
+        <div class="active-actions">
+          <button mat-button (click)="cancelarModoSelecao()" aria-label="Cancelar seleção">
+            Cancelar
+          </button>
+          <button
+            mat-flat-button
+            color="warn"
+            [disabled]="selection.isEmpty()"
+            (click)="abrirDialogDelecao()"
+            [attr.aria-label]="'Deletar ' + selection.selected.length + ' alunos selecionados'"
+          >
+            <mat-icon>delete</mat-icon> Deletar ({{ selection.selected.length }})
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+
+  <mat-paginator [pageSizeOptions]="[5, 10, 25]" showFirstLastButtons aria-label="Navegação da paginação de alunos"></mat-paginator>
+</div>

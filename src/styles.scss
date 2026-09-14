@@ -1,1 +1,252 @@
-/* You can add global styles to this file, and also import other style files */
+@use '_theme-colors.scss' as theme;
+@use '@angular/material' as mat;
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  @include mat.theme(
+    (
+      color: (
+        primary: theme.$primary-palette,
+        tertiary: theme.$tertiary-palette,
+        theme-type: light,
+      ),
+      typography: Roboto,
+      density: 0,
+    )
+  );
+}
+
+body {
+  color-scheme: light;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  font: var(--mat-sys-body-medium);
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  line-height: 1.5;
+}
+
+:root {
+  /* Marca e Cores Primárias */
+  --color-primary: #1e3a8a;
+  --color-primary-hover: #1d4ed8;
+  --color-primary-light: #eff6ff;
+
+  /* Superfícies e Fundos */
+  --bg-app: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-sidebar: #172554;
+
+  /* Textos e Tipografia */
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+  --text-on-primary: #ffffff;  
+
+  /* Status e Feedbacks */
+  --status-pending: #d97706;
+  --status-approved: #16a34a;
+  --status-rejected: #dc2626;
+
+  /* Background Chips */
+  --bg-approved: #e8f5e9; 
+  --bg-pending: #fff3e0; 
+  --bg-rejected: #ffebee; 
+  --bg-total: #e0e0e0;
+  --bg-repo: #ebf8ff;
+
+  /* Bordas e Divisores */
+  --border-color: #e2e8f0;
+  --border-color-light: #f1f5f9;
+
+  /* Arredondamento e Sombras */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+ul, ol {
+  list-style: none;
+}
+
+/* ESTRUTURA DE PÁGINAS */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  background-color: var(--bg-surface);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--bg-sidebar);
+  margin: 0;
+}
+
+.page-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin-top: 4px;
+}
+
+/* ÍCONES DENTRO DE FORMS */
+.mat-mdc-form-field {
+  mat-icon {
+    color: var(--color-primary);
+  }
+}
+
+/* AJUSTES DE DIÁLOGOS */
+.dialog-no-scroll-x {
+  .mat-mdc-dialog-surface {
+    max-height: 85vh;
+  }
+
+  .mat-mdc-dialog-surface,
+  .mat-mdc-dialog-content {
+    box-sizing: border-box;
+    overflow-x: hidden !important;
+    overflow-y: auto;
+    outline: none;
+
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+}
+
+/* TABELAS */
+.table-container {
+  background-color: var(--bg-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+
+  table.mat-mdc-table {
+    width: 100%;
+
+    .mat-mdc-header-row {
+      background-color: var(--bg-app);
+    }
+
+    .mat-mdc-header-cell {
+      color: var(--color-primary);
+      font-weight: 600;
+      font-size: 0.85rem;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    .mat-mdc-row {
+      transition: background-color 0.15s ease;
+
+      &:hover {
+        background-color: var(--color-primary-light);
+      }
+    }
+
+    .mat-mdc-cell {
+      color: var(--text-primary);
+      border-bottom: 1px solid var(--border-color-light);
+      font-size: 0.875rem;
+    }
+
+    mat-icon {
+      color: var(--color-primary);
+      &:hover {
+        color: var(--color-primary-hover);
+      }
+    }
+  }
+}
+
+/* MENUS E PAINÉIS */
+.mat-mdc-menu-content {
+  background-color: var(--bg-surface);
+  border-radius: var(--radius-sm);
+
+  .mat-mdc-menu-item-text {
+    color: var(--text-primary);
+  }
+}
+
+/* BANNERS DE ERRO */
+.error-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background-color: var(--bg-rejected);
+  color: var(--status-rejected);
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  border: 1px solid var(--status-rejected);
+  margin-bottom: 16px;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+
+  span {
+    flex: 1;
+  }
+}
+
+/* BARRA INFERIOR DA TABELA */
+.table-footer-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background-color: var(--bg-surface);
+  border-top: 1px solid var(--border-color);
+
+  .table-actions {
+    display: flex;
+    align-items: center;
+
+    .active-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  }
+
+  mat-paginator {
+    background: transparent;
+  }
+}
+
+/* COLUNA DE CHECKBOX */
+.checkbox-col {
+  width: 48px;
+  padding-left: 16px;
+  padding-right: 8px;
+}

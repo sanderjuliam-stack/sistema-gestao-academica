@@ -1,0 +1,84 @@
+.novo-aluno-btn {
+  span {
+    color: var(--color-primary)
+  }
+  mat-icon {
+    color: var(--color-primary);
+  }
+  &:hover{
+    span {
+      color: var(--color-primary-hover)
+    }
+    mat-icon {
+      color: var(--color-primary-hover);
+    }
+  }
+}
+
+.filter-card {
+  background-color: var(--bg-surface);
+  padding: 16px;
+  border-radius: var(--radius-md);
+  margin-bottom: 20px;
+  border: 1px solid var(--border-color);
+
+  .search-field {
+    width: 100%;
+    margin-bottom: -1.25em;
+  }
+}
+
+.table-container {
+  table.mat-mdc-table {
+    .acoes-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr); /* Cria 2 colunas de tamanhos iguais */
+      gap: 1px;
+    }
+  }
+}
+
+
+.aluno-info {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0;
+
+  .aluno-nome {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .aluno-sub {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+  }
+}
+
+.status-pill {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+
+  &.em-andamento {
+    background-color: #ebf8ff;
+    color: var(--status-info);
+  }
+
+  &.concluido {
+    background-color: #f0fff4;
+    color: var(--status-approved);
+  }
+
+  &.cancelado {
+    background-color: #fff5f5;
+    color: var(--status-rejected);
+  }
+
+  &.sem-matricula {
+    background-color: #f7fafc;
+    color: var(--text-muted);
+  }
+}
