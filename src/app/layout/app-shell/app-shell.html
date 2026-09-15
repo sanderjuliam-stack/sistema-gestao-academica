@@ -29,6 +29,18 @@
           }
         </a>
       }
+      <!-- Item de Logout -->
+      <a 
+        mat-list-item 
+        (click)="onLogout()" 
+        [matTooltip]="isCollapsed() ? 'Sair do Sistema' : ''"
+        matTooltipPosition="right"
+        class="nav-item logout-item">
+        <mat-icon matListItemIcon>logout</mat-icon>
+        @if (!isCollapsed()) {
+          <span matListItemTitle>Sair</span>
+        }
+      </a>
     </mat-nav-list>
   </mat-sidenav>
 

@@ -1,12 +1,18 @@
 import { Routes } from '@angular/router';
 import { AppShellComponent } from './layout/app-shell/app-shell';
+import { authGuard } from './auth/auth-guard';
 
 export const routes: Routes = [
+  { 
+    path: 'login', 
+    loadComponent: () => import('./auth/login/login').then(m => m.LoginComponent) 
+  },
   {
     path: '',
-    component: AppShellComponent,
+    loadComponent: () => import('./layout/app-shell/app-shell').then(m => m.AppShellComponent),
+    canActivate: [authGuard],
     children: [
-      { path: '', redirectTo: 'solicitacoes', pathMatch: 'full' },
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       {
         path: 'solicitacoes',
         loadComponent: () =>
@@ -39,5 +45,5 @@ export const routes: Routes = [
       },
     ],
   },
-  { path: '**', redirectTo: 'solicitacoes' },
+  { path: '**', redirectTo: 'login' },
 ];

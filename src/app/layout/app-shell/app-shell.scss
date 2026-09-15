@@ -64,6 +64,21 @@
         }
       }
     }
+
+    /* Estilo customizado para o botão de saída */
+    .logout-item {
+      margin-top: 170px;
+      margin-left: 11px;
+      cursor: pointer;
+      
+      mat-icon, span {
+        color: var(--status-rejected) !important;
+      }
+
+      &:hover {
+        background-color: rgba(220, 38, 38, 0.12) !important;
+      }
+    }
   }
 
   /* FECHADO */

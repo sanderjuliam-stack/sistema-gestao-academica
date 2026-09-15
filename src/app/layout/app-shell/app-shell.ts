@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 
 // Módulos do Angular Material
@@ -7,6 +7,8 @@ import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
+
+import { AuthService } from '../../auth/auth';
 
 interface NavItem {
   label: string;
@@ -31,6 +33,8 @@ interface NavItem {
   styleUrl: './app-shell.scss',
 })
 export class AppShellComponent {
+  private readonly authService = inject(AuthService);
+
   readonly isCollapsed = signal<boolean>(false);
 
   readonly navItems = signal<NavItem[]>([
@@ -44,5 +48,9 @@ export class AppShellComponent {
 
   toggleSidenav(): void {
     this.isCollapsed.update((prev) => !prev);
+  }
+
+  onLogout(): void {
+    this.authService.logout();
   }
 }
