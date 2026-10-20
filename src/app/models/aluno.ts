@@ -26,7 +26,7 @@ export interface Matricula {
   readonly alunoId: number;
   readonly cursoId: number;
   cursoNome: string;
-  dataInicio?: string;
+  dataInicio: string;
   dataTermino?: string;
   frequenciaGeralPct?: number;
   tcc?: TccAluno;

@@ -1,0 +1,110 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Financeiro</h1>
+    <p class="page-subtitle">Acompanhe a arrecadação dos cursos e os valores a pagar a Arnaldo.</p>
+  </div>
+  <button mat-raised-button color="primary" (click)="exportarResumo()">
+    <mat-icon>download</mat-icon> Exportar resumo
+  </button>
+</div>
+
+<!-- Filtros do Topo -->
+<div class="filters-container mat-elevation-z1">
+  <mat-form-field appearance="outline" class="flex-1">
+    <mat-label>Instituição</mat-label>
+    <mat-select [ngModel]="instituicaoSelecionada()" (ngModelChange)="onInstituicaoChange($event)">
+      @for (inst of instituicoes(); track inst.id) {
+        <mat-option [value]="inst">{{ inst.nome }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="flex-1">
+    <mat-label>Curso</mat-label>
+    <mat-select [(ngModel)]="cursoSelecionadoId">
+      <mat-option value="todos">Todos os cursos</mat-option>
+      @for (curso of cursosDaInstituicao(); track curso.id) {
+        <mat-option [value]="curso.id">{{ curso.nome }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="flex-1">
+    <mat-label>Competência do repasse</mat-label>
+    <input matInput type="month" [(ngModel)]="competenciaSelecionada" />
+  </mat-form-field>
+</div>
+
+<!-- Cards de Resumo -->
+<div class="summary-cards">
+  <mat-card class="summary-card">
+    <mat-card-content>
+      <span class="card-label">Arrecadação total da instituição</span>
+      <h2 class="card-value">{{ arrecadacaoTotal() | currency:'BRL':'symbol':'1.2-2' }}</h2>
+      <span class="card-sub">Valores recebidos até agora (período selecionado)</span>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card class="summary-card">
+    <mat-card-content>
+      <span class="card-label">Matrículas nos cursos</span>
+      <h2 class="card-value">{{ totalMatriculasCount() }}</h2>
+      <span class="card-sub">{{ instituicaoSelecionada()?.nome || 'Selecione uma instituição' }}</span>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card class="summary-card highlight">
+    <mat-card-content>
+      <span class="card-label">A pagar a Arnaldo ({{ competenciaSelecionada() }})</span>
+      <h2 class="card-value text-warn">{{ valorRepasseArnaldo() | currency:'BRL':'symbol':'1.2-2' }}</h2>
+      <span class="card-sub">Software (R$ 200) + Matrículas novas (R$ 300/cada)</span>
+    </mat-card-content>
+  </mat-card>
+</div>
+
+<!-- Detalhamento de Pagamentos a Arnaldo -->
+<mat-card class="section-card">
+  <mat-card-header>
+    <mat-card-title>Pagamentos a Arnaldo</mat-card-title>
+    <mat-card-subtitle>Competência: {{ competenciaSelecionada() }} - Repasses consolidados</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    <div class="table-container">
+      <table mat-table [dataSource]="[
+        { descricao: 'Mensalidade do Software (Cobrança por instituição)', qtd: '1 mês', unitario: 200, total: 200 },
+        { descricao: 'Matrículas novas na competência', qtd: matriculasNovasCompetencia() + ' matrícula(s)', unitario: 300, total: matriculasNovasCompetencia() * 300 }
+      ]">
+        <ng-container matColumnDef="descricao">
+          <th mat-header-cell *matHeaderCellDef>Descrição</th>
+          <td mat-cell *matCellDef="let element"><strong>{{ element.descricao }}</strong></td>
+        </ng-container>
+        <ng-container matColumnDef="qtd">
+          <th mat-header-cell *matHeaderCellDef>Quantidade</th>
+          <td mat-cell *matCellDef="let element">{{ element.qtd }}</td>
+        </ng-container>
+        <ng-container matColumnDef="unitario">
+          <th mat-header-cell *matHeaderCellDef>Valor Unitário</th>
+          <td mat-cell *matCellDef="let element">{{ element.unitario | currency:'BRL':'symbol':'1.2-2' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="total">
+          <th mat-header-cell *matHeaderCellDef class="text-right">Valor a pagar</th>
+          <td mat-cell *matCellDef="let element" class="text-right">{{ element.total | currency:'BRL':'symbol':'1.2-2' }}</td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="['descricao', 'qtd', 'unitario', 'total']"></tr>
+        <tr mat-row *matRowDef="let row; columns: ['descricao', 'qtd', 'unitario', 'total'];"></tr>
+      </table>
+    </div>
+
+    <div class="vencimento-row">
+      <mat-form-field appearance="outline">
+        <mat-label>Vencimento do Repasse</mat-label>
+        <input matInput type="date" [(ngModel)]="vencimentoRepasse" />
+      </mat-form-field>
+      <div class="total-geral">
+        <span>Total a pagar:</span>
+        <h2>{{ valorRepasseArnaldo() | currency:'BRL':'symbol':'1.2-2' }}</h2>
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>

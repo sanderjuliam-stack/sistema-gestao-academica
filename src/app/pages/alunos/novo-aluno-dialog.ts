@@ -16,6 +16,7 @@ import { CursoService } from '../../services/curso';
 
 @Component({
   selector: 'app-novo-aluno-dialog',
+  standalone: true,
   imports: [
     FormsModule,
     MatDialogModule,
@@ -106,7 +107,7 @@ import { CursoService } from '../../services/curso';
                 [displayWith]="displayCursoFn"
                 (optionSelected)="onCursoSelecionado($event.option.value)">
                 @for (curso of cursosFiltrados(); track curso.id) {
-                  <mat-option [value]="curso">{{ curso.nome }}</mat-option>
+                  <mat-option [value]="curso">{{ curso.nome }} @if (curso.instituicao.nome) { ({{ curso.instituicao.nome }}) }</mat-option>
                 } @empty {
                   <mat-option disabled>Nenhum curso encontrado</mat-option>
                 }
@@ -430,8 +431,8 @@ export class NovoAlunoDialogComponent implements OnInit {
 
   onCursoSelecionado(curso: Curso): void {
     this.cursoSelecionado.set(curso);
-    this.cursoId.set(curso.id);
-    this.carregarDisciplinasDoCurso(curso.id);
+    this.cursoId.set(curso.id!);
+    this.carregarDisciplinasDoCurso(curso.id!);
     this.limparErro();
   }
 

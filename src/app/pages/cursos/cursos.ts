@@ -107,7 +107,7 @@ export class CursosComponent implements OnInit {
       (c) =>
         !termo ||
         c.nome.toLowerCase().includes(termo) ||
-        c.instituicao?.toLowerCase().includes(termo) ||
+        c.instituicao?.nome?.toLowerCase().includes(termo) || // <-- Ajustado para acessar .nome
         c.areaConhecimento?.toLowerCase().includes(termo) ||
         c.nivel?.toLowerCase().includes(termo)
     );
@@ -211,14 +211,14 @@ export class CursosComponent implements OnInit {
   }
 
   private executarExclusao(cursosDeletar: Curso[]): void {
-    const ids = cursosDeletar.map((c) => c.id);
+    const ids = cursosDeletar.map((c) => c.id!).filter((id) => id !== undefined); // <-- Garantindo que o id não seja undefined
 
     // Requisições paralelas de deleção
     const requisicoes = ids.map((id) => this.cursoService.deletarCurso(id));
 
     forkJoin(requisicoes).subscribe({
       next: () => {
-        this.cursos.update((lista) => lista.filter((item) => !ids.includes(item.id)));
+        this.cursos.update((lista) => lista.filter((item) => !ids.includes(item.id!)));
         this.snackBar.open(
           `${ids.length} ${ids.length === 1 ? 'curso excluído' : 'cursos excluídos'} com sucesso!`,
           'OK',

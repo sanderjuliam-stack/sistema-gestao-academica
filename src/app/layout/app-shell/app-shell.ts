@@ -44,6 +44,8 @@ export class AppShellComponent {
     { label: 'Docentes & Cadastro', icon: 'psychology', route: '/docentes' },
     { label: 'Solicitações & Docs', icon: 'assignment', route: '/solicitacoes' },
     { label: 'Consultas & Planilhas', icon: 'find_in_page', route: '/consulta' },
+    { label: 'Instituições & info', icon: 'find_in_page', route: '/instituicoes' },
+    { label: 'Controle Financeiro', icon: 'find_in_page', route: '/financeiro' },
   ]);
 
   toggleSidenav(): void {

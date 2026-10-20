@@ -20,10 +20,13 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { Curso } from '../../models/curso';
 import { Disciplina } from '../../models/disciplina';
 import { Docente } from '../../models/docente';
+import { Instituicao } from '../../models/curso';
 import { DocenteService } from '../../services/docente';
+import { InstituicaoService } from '../../services/instituicao';
 
 @Component({
   selector: 'app-novo-curso-dialog',
+  standalone: true,
   imports: [
     ReactiveFormsModule,
     MatDialogModule,
@@ -58,7 +61,14 @@ import { DocenteService } from '../../services/docente';
           <div class="form-row">
             <mat-form-field appearance="outline" class="flex-1">
               <mat-label>Instituição</mat-label>
-              <input matInput formControlName="instituicao" placeholder="Ex: Campus Central" aria-label="Instituição" />
+              <mat-select formControlName="instituicao" [compareWith]="compararInstituicao" aria-label="Instituição vinculada">
+                @for (inst of instituicoes(); track inst.id) {
+                  <mat-option [value]="inst">{{ inst.nome }}</mat-option>
+                }
+              </mat-select>
+              @if (dadosGeraisForm.get('instituicao')?.hasError('required')) {
+                <mat-error>Campo obrigatório</mat-error>
+              }
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="flex-1">
@@ -81,6 +91,15 @@ import { DocenteService } from '../../services/docente';
               <mat-label>Carga Horária Total (h)</mat-label>
               <input matInput type="number" formControlName="cargaHorariaTotal" placeholder="360" aria-label="Carga horária total em horas" />
               @if (dadosGeraisForm.get('cargaHorariaTotal')?.hasError('required')) {
+                <mat-error>Campo obrigatório</mat-error>
+              }
+            </mat-form-field>
+
+            <!-- Novo campo Preço para a Gestão Financeira -->
+            <mat-form-field appearance="outline" class="flex-1">
+              <mat-label>Preço do Curso (R$)</mat-label>
+              <input matInput type="number" formControlName="preco" placeholder="1200.00" aria-label="Preço do curso" />
+              @if (dadosGeraisForm.get('preco')?.hasError('required')) {
                 <mat-error>Campo obrigatório</mat-error>
               }
             </mat-form-field>
@@ -214,7 +233,6 @@ import { DocenteService } from '../../services/docente';
   </mat-dialog-actions>
   `,
   styles: [`
-  /* Garante altura e rolagem do conteúdo */
   .dialog-content {
     width: 100%;
     max-height: 60vh;
@@ -224,7 +242,6 @@ import { DocenteService } from '../../services/docente';
     padding: 0 16px 16px 16px;
   }
 
-  /* Estilo do Rodapé Fixo */
   .dialog-actions {
     display: flex;
     justify-content: space-between;
@@ -314,17 +331,20 @@ export class NovoCursoDialogComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly dialogRef = inject(MatDialogRef<NovoCursoDialogComponent>);
   private readonly docenteService = inject(DocenteService);
+  private readonly instituicaoService = inject(InstituicaoService);
 
   readonly cursoEdicao = inject<Curso | null>(MAT_DIALOG_DATA, { optional: true });
   readonly docentes = signal<Docente[]>([]);
+  readonly instituicoes = signal<Instituicao[]>([]);
 
-  // Etapa 1 Form Group
+  // Etapa 1 Form Group (incluindo o campo preco)
   readonly dadosGeraisForm: FormGroup = this.fb.group({
     nome: [this.cursoEdicao?.nome ?? '', Validators.required],
-    instituicao: [this.cursoEdicao?.instituicao ?? ''],
+    instituicao: [this.cursoEdicao?.instituicao ?? null, Validators.required],
     areaConhecimento: [this.cursoEdicao?.areaConhecimento ?? ''],
     nivel: [this.cursoEdicao?.nivel ?? 'POS_GRADUACAO', Validators.required],
     cargaHorariaTotal: [this.cursoEdicao?.cargaHorariaTotal ?? null, [Validators.required, Validators.min(1)]],
+    preco: [this.cursoEdicao?.preco ?? null, [Validators.required, Validators.min(0)]],
   });
 
   readonly disciplinasForm: FormGroup = this.fb.group({
@@ -341,6 +361,11 @@ export class NovoCursoDialogComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Carrega instituições para o mat-select
+    this.instituicaoService.getInstituicoes().subscribe((lista) => {
+      this.instituicoes.set(lista);
+    });
+
     if (this.cursoEdicao?.disciplinas?.length) {
       this.cursoEdicao.disciplinas.forEach((disc, index) => {
         this.disciplinasArray.push(
@@ -353,6 +378,10 @@ export class NovoCursoDialogComponent implements OnInit {
       this.docentes.set(lista);
       this.sincronizarDocentesForm();
     });
+  }
+
+  compararInstituicao(inst1: Instituicao, inst2: Instituicao): boolean {
+    return inst1 && inst2 ? inst1.id === inst2.id : inst1 === inst2;
   }
 
   displayDocenteFn(docente: Docente | null): string {
@@ -437,10 +466,11 @@ export class NovoCursoDialogComponent implements OnInit {
     const cursoResultado: Curso = {
       id: this.cursoEdicao?.id ?? 0,
       nome: dadosGerais.nome.trim(),
-      instituicao: dadosGerais.instituicao?.trim() || undefined,
+      instituicao: dadosGerais.instituicao,
       areaConhecimento: dadosGerais.areaConhecimento?.trim() || undefined,
       nivel: dadosGerais.nivel,
       cargaHorariaTotal: Number(dadosGerais.cargaHorariaTotal),
+      preco: Number(dadosGerais.preco), // Incluindo o preço mapeado
       possuiTcc: Boolean(disciplinasFormVal.possuiTcc),
       disciplinas: disciplinasMapeadas,
     };

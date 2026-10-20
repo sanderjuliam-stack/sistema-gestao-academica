@@ -43,6 +43,16 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/consulta-alunos/consulta-alunos').then((m) => m.ConsultaAlunosComponent),
       },
+      {
+        path: 'instituicoes',
+        loadComponent: () =>
+          import('./pages/instituicoes/instituicoes').then((m) => m.InstituicoesComponent),
+      },
+      {
+        path: 'financeiro',
+        loadComponent: () =>
+          import('./pages/financeiro/financeiro').then((m) => m.FinanceiroComponent),
+      },
     ],
   },
   { path: '**', redirectTo: 'login' },

@@ -4,6 +4,7 @@ import { Observable, of } from 'rxjs';
 
 import { environment } from '../../environments/environment';
 import { Curso } from '../models/curso';
+import { Instituicao } from '../models/curso';
 
 @Injectable({
   providedIn: 'root',
@@ -13,26 +14,32 @@ export class CursoService {
   private readonly apiUrl = `${environment.apiUrl}/cursos`;
   private readonly usarMock = environment.usarMock;
 
+  private mockInstituicoes: Instituicao[] = [
+    { id: 1, nome: 'Faculdade Central de Tecnologia', cnpj: '12.345.678/0001-90' },
+    { id: 2, nome: 'Instituto Universitário de Inovação', cnpj: '98.765.432/0001-10' },
+  ];
+
   private mockCursos: Curso[] = [
     {
       id: 1,
       nome: 'Pós-Graduação em Engenharia de Software',
       nivel: 'POS_GRADUACAO',
-      instituicao: 'UNI',
+      instituicao: this.mockInstituicoes[0],
       cargaHorariaTotal: 360,
+      preco: 1200.00, // <-- Adicionado o preço para o cálculo financeiro
       areaConhecimento: 'TI',
       possuiTcc: true,
       disciplinas: [
         { id: 1, nome: 'Arquitetura de Software', cargaHoraria: 60, docenteId: 1, docenteNome: 'Dr. Carlos Eduardo' },
-        { id: 2, nome: 'DevOps & CI/CD', cargaHoraria: 40, docenteId: 2, docenteNome: 'Me. Ana Souza' },
       ],
     },
     {
       id: 2,
       nome: 'Ciência de Dados',
       nivel: 'POS_GRADUACAO',
+      instituicao: this.mockInstituicoes[1],
       cargaHorariaTotal: 400,
-      instituicao: 'UNI2',
+      preco: 1500.00, // <-- Adicionado o preço para o cálculo financeiro
       disciplinas: [
         { id: 3, nome: 'Machine Learning', cargaHoraria: 80, docenteId: 3, docenteNome: 'Dr. Roberto Lima' },
       ],
@@ -69,13 +76,5 @@ export class CursoService {
       return of(undefined);
     }
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
-  }
-
-  deletarCursos(ids: number[]): Observable<void> {
-    if (this.usarMock) {
-      this.mockCursos = this.mockCursos.filter((item) => !ids.includes(item.id));
-      return of(undefined);
-    }
-    return this.http.post<void>(`${this.apiUrl}/deletar-lote`, { ids });
   }
 }
